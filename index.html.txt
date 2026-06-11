@@ -1,0 +1,2257 @@
+<style>
+    /* --- ESTILOS GERAIS & VARIÁVEIS --- */
+    :root {
+        /* Tema Escuro (Padrão) */
+        --bg-main: #0b0f19;
+        --bg-card: #151c2c;
+        --bg-input: #1e293b;
+        --border-color: #2e3c54;
+        --text-main: #f1f5f9;
+        --text-muted: #94a3b8;
+        --accent-blue: #3b82f6;
+        --accent-green: #10b981;
+        --accent-orange: #f97316;
+        --accent-purple: #8b5cf6;
+        --brand-glow: rgba(99, 102, 241, 0.15);
+        --font-primary: 'Inter', sans-serif;
+        --font-heading: 'Outfit', sans-serif;
+        --drawer-width: 480px;
+        --notion-radius: 12px;
+        
+        /* Presets de capa */
+        --cover-gradient: linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #111827 100%);
+    }
+
+    .light-theme {
+        /* Tema Claro */
+        --bg-main: #f8fafc;
+        --bg-card: #ffffff;
+        --bg-input: #f1f5f9;
+        --border-color: #e2e8f0;
+        --text-main: #1e293b;
+        --text-muted: #64748b;
+        --accent-blue: #2563eb;
+        --accent-green: #059669;
+        --accent-orange: #ea580c;
+        --accent-purple: #7c3aed;
+        --brand-glow: rgba(99, 102, 241, 0.08);
+        --cover-gradient: linear-gradient(135deg, #e0e7ff 0%, #fae8ff 50%, #f3f4f6 100%);
+    }
+
+    /* --- CONFIGURAÇÕES DE RESET & LAYOUT --- */
+    * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        transition: background-color 0.25s ease, border-color 0.2s ease, color 0.1s ease;
+    }
+
+    body {
+        font-family: var(--font-primary);
+        background-color: var(--bg-main);
+        color: var(--text-main);
+        line-height: 1.6;
+        overflow-x: hidden;
+        min-height: 100vh;
+    }
+
+    /* --- NOTIFICAÇÃO TOAST --- */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background-color: var(--accent-green);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        z-index: 9999;
+        transform: translateY(150%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+        transform: translateY(0);
+    }
+
+    /* --- NOTION COVER --- */
+    .notion-cover {
+        height: 240px;
+        position: relative;
+        background: var(--cover-gradient);
+        background-size: 200% 200%;
+        animation: gradientAnim 15s ease infinite;
+        overflow: hidden;
+    }
+
+    @keyframes gradientAnim {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+    }
+
+    .cover-gradient {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to bottom, transparent 30%, var(--bg-main) 100%);
+    }
+
+    .change-cover-btn {
+        position: absolute;
+        bottom: 16px;
+        right: 5%;
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        padding: 8px 14px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        z-index: 10;
+    }
+
+    .change-cover-btn:hover {
+        background: rgba(15, 23, 42, 0.85);
+        transform: translateY(-2px);
+    }
+
+    /* --- CONTAINER PRINCIPAL --- */
+    .notion-container {
+        max-width: 1200px;
+        margin: -60px auto 80px auto;
+        padding: 0 24px;
+        position: relative;
+        z-index: 20;
+    }
+
+    /* --- CABEÇALHO NOTION --- */
+    .notion-header {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .emoji-container {
+        position: relative;
+        width: fit-content;
+    }
+
+    #page-emoji {
+        font-size: 4.5rem;
+        cursor: pointer;
+        user-select: none;
+        display: inline-block;
+        transition: transform 0.2s;
+    }
+
+    #page-emoji:hover {
+        transform: scale(1.15) rotate(-5deg);
+    }
+
+    /* Emoji Picker Popups */
+    .emoji-picker {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--notion-radius);
+        padding: 10px;
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+        z-index: 100;
+        width: max-content;
+    }
+
+    .emoji-picker.hidden {
+        display: none !important;
+    }
+
+    .emoji-picker span {
+        font-size: 1.5rem;
+        padding: 6px;
+        cursor: pointer;
+        border-radius: 6px;
+        text-align: center;
+    }
+
+    .emoji-picker span:hover {
+        background-color: var(--bg-input);
+    }
+
+    .title-area h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        font-weight: 800;
+        outline: none;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    .title-area h1:focus, .page-description:focus {
+        background-color: var(--brand-glow);
+    }
+
+    .page-description {
+        color: var(--text-muted);
+        font-size: 1.05rem;
+        margin-top: 8px;
+        outline: none;
+        padding: 2px 4px;
+        border-radius: 4px;
+    }
+
+    /* Controles Gerais */
+    .header-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 10px;
+    }
+
+    .sync-status-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 6px 14px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 500;
+        color: var(--text-muted);
+    }
+
+    .sync-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+    .sync-dot.yellow { background-color: var(--accent-orange); box-shadow: 0 0 8px var(--accent-orange); }
+    .sync-dot.green { background-color: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+    .sync-dot.red { background-color: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+    .theme-switcher {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 8px;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+    }
+
+    .theme-switcher:hover {
+        color: var(--text-main);
+        background-color: var(--bg-input);
+    }
+
+    .export-import {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    /* --- BOTÕES PADRÃO --- */
+    .notion-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid transparent;
+        font-family: var(--font-primary);
+    }
+
+    .btn-primary {
+        background-color: var(--accent-blue);
+        color: white;
+    }
+
+    .btn-primary:hover {
+        filter: brightness(1.1);
+        transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+        background-color: var(--bg-card);
+        border-color: var(--border-color);
+        color: var(--text-main);
+    }
+
+    .btn-secondary:hover {
+        background-color: var(--bg-input);
+        color: var(--text-main);
+    }
+
+    .btn-xs {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+        border-radius: 4px;
+    }
+
+    /* --- SEPARADORES --- */
+    .notion-divider {
+        border: none;
+        height: 1px;
+        background-color: var(--border-color);
+        margin: 24px 0;
+    }
+
+    /* --- CONTROLES DO PLANEADOR --- */
+    .planner-controls {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .navigation-controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .nav-arrow {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        color: var(--text-main);
+        cursor: pointer;
+    }
+
+    .nav-arrow:hover {
+        background-color: var(--bg-input);
+    }
+
+    .month-title {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        font-weight: 700;
+        min-width: 180px;
+        text-align: center;
+    }
+
+    .view-tabs {
+        display: flex;
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        padding: 4px;
+        border-radius: 10px;
+    }
+
+    .tab-btn {
+        background: none;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 7px;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .tab-btn.active {
+        background-color: var(--bg-input);
+        color: var(--text-main);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* --- DASHBOARD STATS --- */
+    .summary-dashboard {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-bottom: 30px;
+    }
+
+    .callout-card {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--notion-radius);
+        padding: 16px;
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .callout-card::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 4px;
+    }
+
+    .callout-card.blue::after { background-color: var(--accent-blue); }
+    .callout-card.green::after { background-color: var(--accent-green); }
+    .callout-card.orange::after { background-color: var(--accent-orange); }
+    .callout-card.purple::after { background-color: var(--accent-purple); }
+
+    .card-icon {
+        font-size: 1.4rem;
+        padding-top: 2px;
+    }
+
+    .callout-card.blue .card-icon { color: var(--accent-blue); }
+    .callout-card.green .card-icon { color: var(--accent-green); }
+    .callout-card.orange .card-icon { color: var(--accent-orange); }
+    .callout-card.purple .card-icon { color: var(--accent-purple); }
+
+    .card-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .card-label {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .card-value {
+        font-family: var(--font-heading);
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+
+    /* --- CLOUD ACTIVE BANNER --- */
+    .cloud-banner {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%);
+        border: 1px dashed var(--accent-green);
+        border-radius: var(--notion-radius);
+        padding: 16px 20px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .cloud-banner-text {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .cloud-banner-text i {
+        font-size: 1.5rem;
+        color: var(--accent-green);
+    }
+
+    .cloud-banner-title {
+        font-weight: 700;
+        font-size: 0.95rem;
+        margin-bottom: 2px;
+    }
+
+    .cloud-banner-desc {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+    }
+
+    /* --- CALENDÁRIO MENSAL GRID --- */
+    .view-container {
+        width: 100%;
+    }
+
+    .view-container.hidden {
+        display: none !important;
+    }
+
+    .calendar-grid-header {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        text-align: center;
+        font-weight: 700;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 10px;
+        padding: 0 4px;
+    }
+
+    .calendar-days-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 8px;
+    }
+
+    .calendar-cell {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: 10px;
+        min-height: 110px;
+        padding: 8px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .calendar-cell:hover {
+        border-color: var(--accent-blue);
+        box-shadow: 0 4px 12px var(--brand-glow);
+        transform: translateY(-2px);
+    }
+
+    .calendar-cell.other-month {
+        opacity: 0.35;
+    }
+
+    .calendar-cell.today {
+        border-width: 2px;
+        border-color: var(--accent-purple);
+        background-color: var(--brand-glow);
+    }
+
+    .day-num {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        align-self: flex-start;
+    }
+
+    .calendar-cell.today .day-num {
+        color: var(--accent-purple);
+        background: rgba(139, 92, 246, 0.15);
+        padding: 2px 6px;
+        border-radius: 4px;
+    }
+
+    /* Conteúdo dentro da célula do dia */
+    .day-metrics {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-top: 6px;
+        flex-grow: 1;
+    }
+
+    .day-badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .badge-mini {
+        font-size: 0.72rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+    }
+
+    .badge-blue { background-color: rgba(59, 130, 246, 0.15); color: var(--accent-blue); }
+    .badge-green { background-color: rgba(16, 185, 129, 0.15); color: var(--accent-green); }
+    .badge-purple { background-color: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+    .badge-orange { background-color: rgba(249, 115, 22, 0.15); color: var(--accent-orange); }
+
+    .cell-hours {
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-top: auto;
+    }
+
+    .cell-tasks-progress {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* --- VISÃO SEMANAL --- */
+    .week-navigation {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .week-range-text {
+        font-family: var(--font-heading);
+        font-size: 1.15rem;
+        font-weight: 700;
+    }
+
+    .week-grid-container {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 12px;
+    }
+
+    .week-col {
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color);
+        border-radius: var(--notion-radius);
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .week-col-header {
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        background-color: rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .week-col-title {
+        font-weight: 700;
+        font-size: 0.9rem;
+        font-family: var(--font-heading);
+    }
+
+    .week-col-date {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+    }
+
+    .week-col-content {
+        padding: 12px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .week-section-title {
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--text-muted);
+        font-weight: 700;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+    }
+
+    /* --- NOTION DRAWER (PAINEL LATERAL) --- */
+    .notion-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: var(--drawer-width);
+        z-index: 1000;
+        visibility: hidden;
+        transition: visibility 0.3s;
+    }
+
+    .notion-drawer.open {
+        visibility: visible;
+    }
+
+    .drawer-overlay {
+        position: absolute;
+        inset: 0;
+        background-color: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(4px);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .notion-drawer.open .drawer-overlay {
+        opacity: 1;
+    }
+
+    .drawer-content {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: var(--bg-card);
+        border-left: 1px solid var(--border-color);
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.25);
+        padding: 30px;
+        overflow-y: auto;
+        transform: translateX(100%);
+        transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .notion-drawer.open .drawer-content {
+        transform: translateX(0);
+    }
+
+    /* Ações no Topo do Drawer */
+    .drawer-top-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .close-drawer-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-size: 0.88rem;
+        cursor: pointer;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .close-drawer-btn:hover {
+        color: var(--text-main);
+    }
+
+    .drawer-date-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: var(--bg-input);
+        padding: 4px 8px;
+        border-radius: 6px;
+    }
+
+    .btn-icon {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+    }
+
+    .btn-icon:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        color: var(--text-main);
+    }
+
+    #drawer-date-title {
+        font-size: 0.82rem;
+        font-weight: 600;
+    }
+
+    /* Cabeçalho do Drawer */
+    .drawer-header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+    }
+
+    .drawer-emoji {
+        font-size: 2.5rem;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .drawer-day-title {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        font-weight: 800;
+    }
+
+    /* Propriedades Estruturadas */
+    .notion-properties {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .property-row {
+        display: flex;
+        align-items: center;
+        font-size: 0.9rem;
+    }
+
+    .property-label {
+        width: 140px;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+    }
+
+    .property-value {
+        flex-grow: 1;
+    }
+
+    .property-value.bold {
+        font-weight: 700;
+        color: var(--accent-blue);
+    }
+
+    .property-input, .property-select {
+        width: 100%;
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 6px 10px;
+        color: var(--text-main);
+        font-family: var(--font-primary);
+        font-size: 0.88rem;
+        outline: none;
+    }
+
+    .property-input:focus, .property-select:focus {
+        border-color: var(--accent-blue);
+    }
+
+    /* Seções do Drawer */
+    .drawer-section {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .drawer-section h3 {
+        font-family: var(--font-heading);
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .preset-buttons {
+        display: flex;
+        gap: 6px;
+    }
+
+    /* Lista de Turnos */
+    .shifts-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .shift-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background-color: var(--bg-input);
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+
+    .shift-row input[type="time"] {
+        background: none;
+        border: none;
+        color: var(--text-main);
+        font-family: var(--font-primary);
+        font-weight: 600;
+        outline: none;
+    }
+
+    .shift-row span {
+        color: var(--text-muted);
+        font-size: 0.8rem;
+    }
+
+    .shift-duration {
+        margin-left: auto;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: var(--text-muted);
+    }
+
+    .delete-shift-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        cursor: pointer;
+    }
+
+    .delete-shift-btn:hover {
+        color: #ef4444;
+    }
+
+    .add-shift-btn {
+        width: 100%;
+        background-color: transparent;
+        border: 1px dashed var(--border-color);
+        color: var(--text-muted);
+        padding: 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+        font-size: 0.82rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+    }
+
+    .add-shift-btn:hover {
+        border-color: var(--accent-blue);
+        color: var(--text-main);
+    }
+
+    .shift-hint {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        line-height: 1.3;
+    }
+
+    /* Lista de Tarefas */
+    .tasks-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .task-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        background-color: var(--bg-input);
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border-color);
+    }
+
+    .task-checkbox-wrapper {
+        margin-top: 3px;
+    }
+
+    .task-text {
+        flex-grow: 1;
+        font-size: 0.88rem;
+        outline: none;
+    }
+
+    .task-item.completed .task-text {
+        text-decoration: line-through;
+        color: var(--text-muted);
+    }
+
+    .add-task-form {
+        display: flex;
+        gap: 8px;
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        padding: 4px 10px;
+    }
+
+    .task-input-field {
+        flex-grow: 1;
+        background: none;
+        border: none;
+        outline: none;
+        color: var(--text-main);
+        font-family: var(--font-primary);
+        font-size: 0.88rem;
+        padding: 4px 0;
+    }
+
+    /* Seção Notas */
+    .day-notes-textarea {
+        width: 100%;
+        min-height: 120px;
+        background-color: var(--bg-input);
+        border: 1px solid var(--border-color);
+        border-radius: var(--notion-radius);
+        padding: 12px;
+        color: var(--text-main);
+        font-family: var(--font-primary);
+        font-size: 0.88rem;
+        outline: none;
+        resize: vertical;
+    }
+
+    .day-notes-textarea:focus {
+        border-color: var(--accent-blue);
+    }
+
+    /* --- RESPONSIVIDADE --- */
+    @media (max-width: 1024px) {
+        .week-grid-container {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        :root {
+            --drawer-width: 100%;
+        }
+        .calendar-grid-header {
+            font-size: 0.7rem;
+        }
+        .calendar-cell {
+            min-height: 90px;
+            padding: 4px;
+        }
+        .badge-mini {
+            font-size: 0.65rem;
+            padding: 1px 3px;
+        }
+        .cell-tasks-progress {
+            display: none;
+        }
+        .week-grid-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .header-controls {
+            flex-direction: column;
+            align-items: stretch;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .week-grid-container {
+            grid-template-columns: 1fr;
+        }
+        .calendar-days-grid {
+            gap: 4px;
+        }
+        .calendar-cell {
+            min-height: 75px;
+        }
+        .day-num {
+            font-size: 0.8rem;
+        }
+        .cell-hours {
+            font-size: 0.70rem;
+        }
+    }
+
+    /* Estilo para impressão */
+    @media print {
+        body {
+            background: white;
+            color: black;
+        }
+        .notion-cover, .header-controls, .planner-controls, .cloud-banner, .add-shift-btn, .add-task-form, .change-cover-btn {
+            display: none !important;
+        }
+        .notion-container {
+            margin: 0;
+            padding: 0;
+        }
+    }
+</style>
+
+
+<!-- Notificação rápida de salvamento automático -->
+<div id="toast" class="toast">
+    <i class="fa-solid fa-circle-check"></i> Salvo automaticamente
+</div>
+
+<!-- Notion-like Cover Banner -->
+<div class="notion-cover">
+    <div class="cover-gradient"></div>
+    <button class="change-cover-btn" onclick="changeCover()"><i class="fa-regular fa-image"></i> Alterar Capa</button>
+</div>
+
+<!-- Container Principal do Notion -->
+<div class="notion-container">
+    
+    <!-- Notion Page Header with Emoji & Title -->
+    <header class="notion-header">
+        <div class="emoji-container" id="page-emoji-container">
+            <span id="page-emoji" onclick="openEmojiPicker(event)">📅</span>
+            <!-- Mini Emoji Picker popup -->
+            <div id="emoji-picker" class="emoji-picker hidden">
+                <span onclick="selectPageEmoji('📅')">📅</span>
+                <span onclick="selectPageEmoji('📝')">📝</span>
+                <span onclick="selectPageEmoji('💻')">💻</span>
+                <span onclick="selectPageEmoji('⏳')">⏳</span>
+                <span onclick="selectPageEmoji('☕')">☕</span>
+                <span onclick="selectPageEmoji('📊')">📊</span>
+                <span onclick="selectPageEmoji('🎯')">🎯</span>
+                <span onclick="selectPageEmoji('🚀')">🚀</span>
+            </div>
+        </div>
+        
+        <div class="title-area">
+            <h1 id="page-title" contenteditable="true" spellcheck="false" onblur="savePageMeta()">Cronograma de Trabalho</h1>
+            <div class="page-description" id="page-desc" contenteditable="true" spellcheck="false" onblur="savePageMeta()">Controle semanal e mensal com meta de horas diárias. Seg-Sex: 08:00 - 12:00 e 13:00 - 18:00.</div>
+        </div>
+        
+        <!-- Controles Gerais, Conexão e Configurações -->
+        <div class="header-controls">
+            <!-- Indicador de Status da Nuvem -->
+            <div class="sync-status-badge" id="sync-status-indicator">
+                <span class="sync-dot yellow" id="sync-indicator-dot"></span>
+                <span id="sync-indicator-text">Carregando módulo de nuvem...</span>
+            </div>
+
+            <div class="theme-switcher" onclick="toggleTheme()">
+                <i id="theme-icon" class="fa-solid fa-sun"></i>
+                <span id="theme-text">Modo Claro</span>
+            </div>
+            
+            <div class="export-import">
+                <button class="notion-btn btn-secondary" onclick="exportData()"><i class="fa-solid fa-download"></i> Exportar</button>
+                <button class="notion-btn btn-secondary" onclick="triggerImport()"><i class="fa-solid fa-upload"></i> Importar</button>
+                <input type="file" id="import-file-input" style="display: none;" onchange="importData(event)" accept=".json">
+                <button class="notion-btn btn-primary" onclick="window.print()"><i class="fa-solid fa-print"></i> Imprimir</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Banner de Informações da Nuvem Ativa -->
+    <div class="cloud-banner" id="cloud-banner">
+        <div class="cloud-banner-text">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <div>
+                <div class="cloud-banner-title" id="cloud-banner-title-text">Sincronização em Nuvem Conectada</div>
+                <div class="cloud-banner-desc" id="cloud-banner-desc-text">As suas horas, tarefas e notas estão salvas de forma segura no servidor central e sincronizadas instantaneamente.</div>
+            </div>
+        </div>
+        <button class="notion-btn btn-primary" style="background-color: var(--accent-green); cursor: default;" id="cloud-action-btn">
+            <i class="fa-solid fa-lock"></i> Canal Seguro Ativo
+        </button>
+    </div>
+
+    <!-- Notion Divider -->
+    <hr class="notion-divider">
+
+    <!-- Barra de Navegação e Filtros do Cronograma -->
+    <section class="planner-controls">
+        <div class="navigation-controls">
+            <button class="nav-arrow" onclick="prevMonth()"><i class="fa-solid fa-chevron-left"></i></button>
+            <h2 id="current-month-year" class="month-title">Junho de 2026</h2>
+            <button class="nav-arrow" onclick="nextMonth()"><i class="fa-solid fa-chevron-right"></i></button>
+            <button class="notion-btn btn-secondary btn-today" onclick="goToday()">Hoje</button>
+        </div>
+        <!-- Alternador de Abas (Mensal / Semanal) -->
+        <div class="view-tabs">
+            <button id="tab-month" class="tab-btn active" onclick="switchView('month')">
+                <i class="fa-regular fa-calendar-days"></i> Calendário Mensal
+            </button>
+            <button id="tab-week" class="tab-btn" onclick="switchView('week')">
+                <i class="fa-solid fa-calendar-week"></i> Quadro Semanal
+            </button>
+        </div>
+    </section>
+
+    <!-- Painel de Resumos e Estatísticas (Cards estilo Notion Callout) -->
+    <section class="summary-dashboard">
+        <div class="summary-card callout-card blue">
+            <div class="card-icon"><i class="fa-regular fa-clock"></i></div>
+            <div class="card-content">
+                <span class="card-label">Horas Trabalhadas (Mês)</span>
+                <span class="card-value" id="stats-total-hours">0.0h</span>
+            </div>
+        </div>
+        <div class="summary-card callout-card green">
+            <div class="card-icon"><i class="fa-solid fa-business-time"></i></div>
+            <div class="card-content">
+                <span class="card-label">Média Diária (Dias Úteis)</span>
+                <span class="card-value" id="stats-average-hours">0.0h</span>
+            </div>
+        </div>
+        <div class="summary-card callout-card orange">
+            <div class="card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="card-content">
+                <span class="card-label">Dias Trabalhados</span>
+                <span class="card-value" id="stats-work-days">0</span>
+            </div>
+        </div>
+        <div class="summary-card callout-card purple">
+            <div class="card-icon"><i class="fa-solid fa-percent"></i></div>
+            <div class="card-content">
+                <span class="card-label">Cumprimento de Meta</span>
+                <span class="card-value" id="stats-meta-percentage">0%</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTAINER DA VISÃO MENSAL -->
+    <div id="month-view-container" class="view-container">
+        <div class="calendar-grid-header">
+            <div class="grid-header-cell">Dom</div>
+            <div class="grid-header-cell">Seg</div>
+            <div class="grid-header-cell">Ter</div>
+            <div class="grid-header-cell">Qua</div>
+            <div class="grid-header-cell">Qui</div>
+            <div class="grid-header-cell">Sex</div>
+            <div class="grid-header-cell">Sáb</div>
+        </div>
+        <div id="calendar-days-grid" class="calendar-days-grid">
+            <!-- Preenchido via JS -->
+        </div>
+    </div>
+
+    <!-- CONTAINER DA VISÃO SEMANAL -->
+    <div id="week-view-container" class="view-container hidden">
+        <div class="week-navigation">
+            <button class="notion-btn btn-secondary" onclick="prevWeek()"><i class="fa-solid fa-chevron-left"></i> Semana Anterior</button>
+            <span id="week-range-text" class="week-range-text">08/06 - 14/06</span>
+            <button class="notion-btn btn-secondary" onclick="nextWeek()">Próxima Semana <i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+        
+        <div class="week-layout">
+            <div class="week-grid-container" id="week-grid-container">
+                <!-- Gerado dinamicamente via JS -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- PAINEL LATERAL DE EDIÇÃO (Notion Slide-out Page) -->
+<div id="notion-drawer" class="notion-drawer">
+    <div class="drawer-overlay" onclick="closeDrawer()"></div>
+    <div class="drawer-content">
+        <!-- Botão de fechar e navegação -->
+        <div class="drawer-top-actions">
+            <button class="close-drawer-btn" onclick="closeDrawer()">
+                <i class="fa-solid fa-angles-right"></i> Fechar página
+            </button>
+            <div class="drawer-date-nav">
+                <button class="btn-icon" onclick="navigateDay(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                <span id="drawer-date-title">10 de Junho de 2026</span>
+                <button class="btn-icon" onclick="navigateDay(1)"><i class="fa-solid fa-chevron-right"></i></button>
+            </div>
+        </div>
+        <!-- Cabeçalho do Dia -->
+        <div class="drawer-header">
+            <div class="drawer-emoji" id="day-emoji" onclick="toggleDayEmojiPicker(event)">📅</div>
+            <!-- Mini Emoji Picker para o Dia -->
+            <div id="day-emoji-picker" class="emoji-picker hidden">
+                <span onclick="selectDayEmoji('📅')">📅</span>
+                <span onclick="selectDayEmoji('💻')">💻</span>
+                <span onclick="selectDayEmoji('☕')">☕</span>
+                <span onclick="selectDayEmoji('🚀')">🚀</span>
+                <span onclick="selectDayEmoji('🏡')">🏡</span>
+                <span onclick="selectDayEmoji('🏢')">🏢</span>
+                <span onclick="selectDayEmoji('🎉')">🎉</span>
+                <span onclick="selectDayEmoji('❌')">❌</span>
+            </div>
+            <h2 id="drawer-day-name" class="drawer-day-title">Quarta-feira</h2>
+        </div>
+        <hr class="notion-divider">
+        <!-- Propriedades do Notion (Campos Estruturados) -->
+        <div class="notion-properties">
+            <div class="property-row">
+                <div class="property-label"><i class="fa-regular fa-clock"></i> Horas Totais</div>
+                <div class="property-value bold" id="drawer-total-hours-value">0.0 horas</div>
+            </div>
+            <div class="property-row">
+                <div class="property-label"><i class="fa-solid fa-tags"></i> Projeto</div>
+                <div class="property-value">
+                    <input type="text" id="property-project" class="property-input" placeholder="Sem projeto" oninput="saveCurrentDayData()">
+                </div>
+            </div>
+            <div class="property-row">
+                <div class="property-label"><i class="fa-solid fa-location-dot"></i> Local</div>
+                <div class="property-value">
+                    <select id="property-location" class="property-select" onchange="saveCurrentDayData()">
+                        <option value="Home Office">🏡 Home Office</option>
+                        <option value="Presencial">🏢 Presencial</option>
+                        <option value="Híbrido">🔄 Híbrido</option>
+                        <option value="Folga">🌴 Folga/Ausente</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <hr class="notion-divider">
+        <!-- Seção de Turnos de Trabalho -->
+        <section class="drawer-section">
+            <div class="section-header">
+                <h3><i class="fa-regular fa-hourglass-half"></i> Turnos de Trabalho</h3>
+                <div class="preset-buttons">
+                    <button class="notion-btn btn-secondary btn-xs" onclick="applyDefaultPreset()">Usar Padrão Seg-Sex</button>
+                    <button class="notion-btn btn-secondary btn-xs" onclick="clearShifts()">Limpar</button>
+                </div>
+            </div>
+            
+            <div id="shifts-list" class="shifts-list">
+                <!-- Turnos inseridos dinamicamente -->
+            </div>
+            
+            <button class="add-shift-btn" onclick="addNewShift()"><i class="fa-solid fa-plus"></i> Adicionar Turno</button>
+            <div class="shift-hint">Padrão do usuário: 08:00 às 12:00 e 13:00 às 18:00 (9 horas de trabalho).</div>
+        </section>
+        <hr class="notion-divider">
+        <!-- Seção de Checklist de Tarefas -->
+        <section class="drawer-section">
+            <h3><i class="fa-regular fa-square-check"></i> Tarefas do Dia</h3>
+            <div id="tasks-list" class="tasks-list">
+                <!-- Tarefas inseridas dinamicamente -->
+            </div>
+            <div class="add-task-form">
+                <input type="text" id="new-task-input" class="task-input-field" placeholder="Escreva uma nova tarefa e aperte Enter..." onkeydown="handleNewTaskKeydown(event)">
+                <button class="btn-icon" onclick="addNewTask()"><i class="fa-solid fa-plus"></i></button>
+            </div>
+        </section>
+        <hr class="notion-divider">
+        <!-- Seção de Notas -->
+        <section class="drawer-section">
+            <h3><i class="fa-regular fa-file-lines"></i> Notas e Anotações</h3>
+            <textarea id="day-notes" class="day-notes-textarea" placeholder="Clique para começar a escrever notas detalhadas para este dia..." oninput="saveCurrentDayData()"></textarea>
+        </section>
+    </div>
+</div>
+
+<!-- SCRIPT DO FIREBASE (Lógica de Conexão à Nuvem e Código Offline) -->
+<script type="module">
+    // Importações Seguras do Firebase SDK v11.6.1
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // --- VARIÁVEIS DE AMBIENTE / CONFIGURAÇÃO ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'notion-planner-personal';
+    const rawFirebaseConfig = typeof __firebase_config !== 'undefined' ? __firebase_config : null;
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    let auth = null;
+    let db = null;
+    let currentUser = null;
+    let isSavingToCloud = false;
+
+    // --- DATA INICIALIZADORA (Junho de 2026) ---
+    let currentYear = 2026;
+    let currentMonth = 5; // Junho é índice 5
+    let currentDayOffset = new Date(2026, 5, 10); // 10 de Junho de 2026
+
+    // Visualização padrão
+    let currentView = 'month';
+    let currentEditingDateStr = '';
+    let currentCoverIndex = 0;
+
+    // Capas estilo Notion (Cores Fluidas)
+    const covers = [
+        'linear-gradient(135deg, #1e1b4b 0%, #311042 50%, #111827 100%)',
+        'linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #020617 100%)',
+        'linear-gradient(135deg, #064e3b 0%, #022c22 50%, #0f172a 100%)',
+        'linear-gradient(135deg, #7c2d12 0%, #431407 50%, #0f172a 100%)',
+        'linear-gradient(135deg, #581c87 0%, #3b0764 50%, #030712 100%)',
+        'linear-gradient(135deg, #1f2937 0%, #111827 100%)'
+    ];
+
+    // Modelo de Metadados do App
+    let pageMeta = {
+        emoji: '📅',
+        title: 'Cronograma de Trabalho',
+        desc: 'Controle semanal e mensal com meta de horas diárias. Seg-Sex: 08:00 - 12:00 e 13:00 - 18:00.',
+        coverIdx: 0
+    };
+
+    // Base de Dados de Rastreamento (Carregada Offline como fallback caso o servidor esteja inacessível)
+    let plannerData = {
+        "2026-06-01": {
+            emoji: "💻",
+            project: "Desenvolvimento Core",
+            location: "Home Office",
+            shifts: [{ start: "08:00", end: "12:00" }, { start: "13:00", end: "18:00" }],
+            tasks: [{ text: "Organizar tarefas da semana", completed: true }, { text: "Revisão de relatórios", completed: true }],
+            notes: "Foco total na infraestrutura."
+        },
+        "2026-06-10": {
+            emoji: "📅",
+            project: "Painel Principal",
+            location: "Home Office",
+            shifts: [{ start: "08:00", end: "12:00" }, { start: "13:00", end: "18:00" }],
+            tasks: [{ text: "Montar cronograma de trabalho diário", completed: false }, { text: "Verificar sincronização em nuvem", completed: true }],
+            notes: "Testando a integração de banco de dados!"
+        }
+    };
+
+    // --- MANIPULAÇÃO DO TOAST ---
+    function triggerToast(message) {
+        const toastEl = document.getElementById('toast');
+        toastEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${message}`;
+        toastEl.classList.add('show');
+        setTimeout(() => {
+            toastEl.classList.remove('show');
+        }, 2500);
+    }
+
+    // --- SISTEMA DE STATUS DE CONEXÃO ---
+    function updateSyncStatus(status, detail = '') {
+        const dot = document.getElementById('sync-indicator-dot');
+        const text = document.getElementById('sync-indicator-text');
+        const cloudBanner = document.getElementById('cloud-banner');
+        const cloudBannerTitle = document.getElementById('cloud-banner-title-text');
+        const cloudBannerDesc = document.getElementById('cloud-banner-desc-text');
+        const cloudActionBtn = document.getElementById('cloud-action-btn');
+
+        dot.className = "sync-dot";
+
+        if (status === "connecting") {
+            dot.classList.add("yellow");
+            text.innerText = "Conectando ao servidor...";
+        } else if (status === "connected") {
+            dot.classList.add("green");
+            text.innerText = "Sincronizado";
+            
+            cloudBanner.style.border = "1px dashed var(--accent-green)";
+            cloudBanner.style.background = "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(59, 130, 246, 0.08) 100%)";
+            cloudBannerTitle.innerText = "Sincronização Ativa";
+            cloudBannerDesc.innerText = `Você está conectado de forma segura. ID da Sessão: ${detail}`;
+            cloudActionBtn.innerHTML = '<i class="fa-solid fa-cloud"></i> Servidor Online';
+        } else if (status === "saving") {
+            dot.classList.add("yellow");
+            text.innerText = "Salvando na nuvem...";
+        } else if (status === "offline") {
+            dot.classList.add("red");
+            text.innerText = "Modo Local (Offline)";
+            
+            cloudBanner.style.border = "1px dashed var(--accent-orange)";
+            cloudBanner.style.background = "linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(249, 115, 22, 0.02) 100%)";
+            cloudBannerTitle.innerText = "Modo Offline / Servidor Local";
+            cloudBannerDesc.innerText = "Os dados estão sendo salvos no seu navegador. Ative um banco de dados nas configurações para sincronizar entre múltiplos dispositivos.";
+            cloudActionBtn.innerHTML = '<i class="fa-solid fa-wifi"></i> Salvo Localmente';
+        } else if (status === "error") {
+            dot.classList.add("red");
+            text.innerText = "Erro de conexão";
+            console.error("Erro no sincronizador:", detail);
+        }
+    }
+
+    // --- INICIALIZAÇÃO DE BANCO DE DADOS EM NUVEM (CONFORME REGRA 3) ---
+    async function initCloudServer() {
+        if (!rawFirebaseConfig) {
+            updateSyncStatus("offline");
+            return;
+        }
+
+        try {
+            updateSyncStatus("connecting");
+            const config = JSON.parse(rawFirebaseConfig);
+            const app = initializeApp(config);
+            auth = getAuth(app);
+            db = getFirestore(app);
+
+            // Autenticação antes das chamadas de banco de dados (Regra 3)
+            if (initialAuthToken) {
+                await signInWithCustomToken(auth, initialAuthToken);
+            } else {
+                await signInAnonymously(auth);
+            }
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    updateSyncStatus("connected", user.uid);
+                    startRealtimeSync(user.uid);
+                } else {
+                    currentUser = null;
+                    updateSyncStatus("offline");
+                }
+            });
+        } catch (error) {
+            updateSyncStatus("error", error.message);
+            updateSyncStatus("offline"); // Fallback seguro
+        }
+    }
+
+    // --- SINCRONIZAÇÃO EM TEMPO REAL (REGRA 1 & REGRA 2) ---
+    function startRealtimeSync(userId) {
+        // Estrutura de caminhos estrita (Regra 1): /artifacts/{appId}/users/{userId}/settings/state
+        const docRef = doc(db, 'artifacts', appId, 'users', userId, 'settings', 'state');
+
+        // Escuta atualizações do servidor (Regra 2 - sem queries complexas, leitura direta do documento)
+        onSnapshot(docRef, (docSnap) => {
+            if (isSavingToCloud) return; // Ignora o eco local de escrita
+
+            if (docSnap.exists()) {
+                const cloudData = docSnap.data();
+                if (cloudData.plannerData) plannerData = cloudData.plannerData;
+                if (cloudData.pageMeta) {
+                    pageMeta = cloudData.pageMeta;
+                    currentCoverIndex = pageMeta.coverIdx || 0;
+                }
+                renderAll();
+                triggerToast('Sincronizado com o servidor');
+            } else {
+                // Sem dados na nuvem: envia o estado inicial do usuário
+                saveStateToServer();
+            }
+        }, (error) => {
+            console.error("Erro na escuta ativa do servidor:", error);
+            triggerToast('Erro de sincronização. Usando armazenamento local.');
+        });
+    }
+
+    // --- ENVIO DE DADOS PARA O SERVIDOR ---
+    async function saveStateToServer() {
+        if (!db || !currentUser) return;
+        isSavingToCloud = true;
+        updateSyncStatus("saving");
+
+        try {
+            const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'settings', 'state');
+            await setDoc(docRef, {
+                plannerData: plannerData,
+                pageMeta: pageMeta,
+                lastModified: new Date().toISOString()
+            }, { merge: true });
+            updateSyncStatus("connected", currentUser.uid);
+        } catch (error) {
+            console.error("Erro de persistência no servidor:", error);
+            updateSyncStatus("error", error.message);
+        } finally {
+            isSavingToCloud = false;
+        }
+    }
+
+    // Debounce para evitar sobrecarga no servidor de banco de dados
+    let cloudSaveTimeout;
+    function queueServerSave() {
+        if (!currentUser) return; // Modo offline, dispensa upload
+        clearTimeout(cloudSaveTimeout);
+        cloudSaveTimeout = setTimeout(() => {
+            saveStateToServer();
+        }, 1200); // Aguarda o usuário parar de digitar por 1.2 segundos
+    }
+
+    // --- CARREGAMENTO INICIAL ---
+    window.addEventListener('load', () => {
+        loadThemePreference();
+        initCloudServer();
+        renderAll();
+    });
+
+    // --- FUNÇÃO DE SALVAMENTO REATIVO (AUTO SAVE) ---
+    let autoSaveTimeout;
+    function autoSaveTrigger() {
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            triggerToast('Salvo automaticamente');
+            renderAll();
+            queueServerSave();
+        }, 800);
+    }
+
+    // --- RENDERIZADORES GERAIS ---
+    function renderAll() {
+        renderPageMeta();
+        updateMonthHeader();
+        renderCalendarView();
+        renderWeekView();
+        calculateAndRenderStats();
+    }
+
+    // --- GESTÃO DE TÍTULOS & EMOJI DO DOCUMENTO ---
+    function renderPageMeta() {
+        document.getElementById('page-title').innerText = pageMeta.title;
+        document.getElementById('page-desc').innerText = pageMeta.desc;
+        document.getElementById('page-emoji').innerText = pageMeta.emoji;
+        document.querySelector('.notion-cover').style.background = covers[pageMeta.coverIdx];
+    }
+
+    function savePageMeta() {
+        pageMeta.title = document.getElementById('page-title').innerText.trim() || 'Cronograma de Trabalho';
+        pageMeta.desc = document.getElementById('page-desc').innerText.trim() || 'Controle de metas e tarefas diárias.';
+        autoSaveTrigger();
+    }
+
+    function changeCover() {
+        currentCoverIndex = (currentCoverIndex + 1) % covers.length;
+        pageMeta.coverIdx = currentCoverIndex;
+        document.querySelector('.notion-cover').style.background = covers[currentCoverIndex];
+        autoSaveTrigger();
+    }
+
+    // Page Emoji Pickers
+    function openEmojiPicker(event) {
+        event.stopPropagation();
+        document.getElementById('emoji-picker').classList.toggle('hidden');
+    }
+
+    function selectPageEmoji(emoji) {
+        pageMeta.emoji = emoji;
+        document.getElementById('page-emoji').innerText = emoji;
+        document.getElementById('emoji-picker').classList.add('hidden');
+        autoSaveTrigger();
+    }
+
+    // --- CÁLCULO DE HORAS ---
+    function calcShiftHours(start, end) {
+        if (!start || !end) return 0;
+        const [sh, sm] = start.split(':').map(Number);
+        const [eh, em] = end.split(':').map(Number);
+        let diffMins = (eh * 60 + em) - (sh * 60 + sm);
+        if (diffMins < 0) diffMins += 24 * 60; // Suporta turnos noturnos
+        return diffMins / 60;
+    }
+
+    // Fecha menus se clicar fora
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('#page-emoji-container')) {
+            document.getElementById('emoji-picker').classList.add('hidden');
+        }
+        if (!e.target.closest('.drawer-header')) {
+            document.getElementById('day-emoji-picker').classList.add('hidden');
+        }
+    });
+
+    function calcTotalDayHours(dayData) {
+        if (!dayData || !dayData.shifts || dayData.shifts.length === 0) return 0;
+        return dayData.shifts.reduce((acc, s) => acc + calcShiftHours(s.start, s.end), 0);
+    }
+
+    // --- CÁLCULO DAS ESTATÍSTICAS ---
+    function calculateAndRenderStats() {
+        let totalHours = 0;
+        let workDaysCount = 0;
+        let totalBusinessDays = 0;
+
+        const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayDate = new Date(currentYear, currentMonth, d);
+            const dayOfWeek = dayDate.getDay();
+            const isWeekday = dayOfWeek !== 0 && dayOfWeek !== 6;
+
+            if (isWeekday) totalBusinessDays++;
+
+            const dateStr = formatDateKey(dayDate);
+            const dayData = plannerData[dateStr];
+            if (dayData) {
+                const hrs = calcTotalDayHours(dayData);
+                if (hrs > 0) {
+                    totalHours += hrs;
+                    workDaysCount++;
+                }
+            }
+        }
+
+        const metaHoursGoal = totalBusinessDays * 9.0;
+        const achievementPct = metaHoursGoal > 0 ? Math.round((totalHours / metaHoursGoal) * 100) : 0;
+        const avgDailyHours = workDaysCount > 0 ? (totalHours / workDaysCount) : 0;
+
+        document.getElementById('stats-total-hours').innerText = `${totalHours.toFixed(1)}h`;
+        document.getElementById('stats-average-hours').innerText = `${avgDailyHours.toFixed(1)}h`;
+        document.getElementById('stats-work-days').innerText = workDaysCount;
+        document.getElementById('stats-meta-percentage').innerText = `${achievementPct}%`;
+    }
+
+    // --- RENDERIZAÇÃO DA VISÃO MENSAL ---
+    function renderCalendarView() {
+        const grid = document.getElementById('calendar-days-grid');
+        grid.innerHTML = '';
+
+        const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+        const totalDaysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+        const prevMonthDays = new Date(currentYear, currentMonth, 0).getDate();
+
+        // Dias do mês anterior (Foscos)
+        for (let i = firstDayIndex; i > 0; i--) {
+            const d = prevMonthDays - i + 1;
+            const prevDate = new Date(currentYear, currentMonth - 1, d);
+            const dateStr = formatDateKey(prevDate);
+            grid.appendChild(createCalendarCell(d, true, dateStr));
+        }
+
+        // Dias do mês atual
+        for (let d = 1; d <= totalDaysInMonth; d++) {
+            const currDate = new Date(currentYear, currentMonth, d);
+            const dateStr = formatDateKey(currDate);
+            grid.appendChild(createCalendarCell(d, false, dateStr));
+        }
+
+        // Dias do próximo mês (Foscos)
+        const totalCells = firstDayIndex + totalDaysInMonth;
+        const remainingCells = (totalCells % 7 === 0) ? 0 : 7 - (totalCells % 7);
+        for (let d = 1; d <= remainingCells; d++) {
+            const nextDate = new Date(currentYear, currentMonth + 1, d);
+            const dateStr = formatDateKey(nextDate);
+            grid.appendChild(createCalendarCell(d, true, dateStr));
+        }
+    }
+
+    function createCalendarCell(dayNum, isOtherMonth, dateStr) {
+        const cell = document.createElement('div');
+        cell.className = 'calendar-cell';
+        if (isOtherMonth) cell.classList.add('other-month');
+
+        // Sinalizador de Hoje (10/06/2026)
+        if (dateStr === "2026-06-10") {
+            cell.classList.add('today');
+        }
+
+        const dayNumEl = document.createElement('span');
+        dayNumEl.className = 'day-num';
+        dayNumEl.innerText = dayNum;
+        cell.appendChild(dayNumEl);
+
+        const dayData = plannerData[dateStr];
+        if (dayData) {
+            const dayMetrics = document.createElement('div');
+            dayMetrics.className = 'day-metrics';
+
+            const badgeRow = document.createElement('div');
+            badgeRow.className = 'day-badge-row';
+            
+            if (dayData.location) {
+                let locBadgeClass = 'badge-blue';
+                if (dayData.location === 'Presencial') locBadgeClass = 'badge-green';
+                if (dayData.location === 'Folga') locBadgeClass = 'badge-orange';
+                
+                const locEmoji = dayData.location === 'Home Office' ? '🏡' : (dayData.location === 'Presencial' ? '🏢' : '🌴');
+                badgeRow.innerHTML += `<span class="badge-mini ${locBadgeClass}">${locEmoji} ${dayData.location.split(' ')[0]}</span>`;
+            }
+
+            dayMetrics.appendChild(badgeRow);
+
+            const hrs = calcTotalDayHours(dayData);
+            if (hrs > 0) {
+                const hrsEl = document.createElement('div');
+                hrsEl.className = 'cell-hours';
+                hrsEl.innerHTML = `<i class="fa-regular fa-clock"></i> <strong>${hrs.toFixed(1)}h</strong>`;
+                dayMetrics.appendChild(hrsEl);
+            }
+
+            if (dayData.tasks && dayData.tasks.length > 0) {
+                const completedCount = dayData.tasks.filter(t => t.completed).length;
+                const tasksEl = document.createElement('div');
+                tasksEl.className = 'cell-tasks-progress';
+                tasksEl.innerHTML = `<i class="fa-regular fa-square-check"></i> ${completedCount}/${dayData.tasks.length}`;
+                dayMetrics.appendChild(tasksEl);
+            }
+
+            cell.appendChild(dayMetrics);
+        }
+
+        cell.onclick = () => openDrawer(dateStr);
+        return cell;
+    }
+
+    // --- RENDERIZAÇÃO DA VISÃO SEMANAL ---
+    function renderWeekView() {
+        const container = document.getElementById('week-grid-container');
+        container.innerHTML = '';
+
+        const startOfWeek = getMonday(currentDayOffset);
+        
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        document.getElementById('week-range-text').innerText = `${formatDateShort(startOfWeek)} - ${formatDateShort(endOfWeek)}`;
+
+        const weekDays = ["Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado", "Domingo"];
+
+        for (let i = 0; i < 7; i++) {
+            const dayDate = new Date(startOfWeek);
+            dayDate.setDate(startOfWeek.getDate() + i);
+            const dateStr = formatDateKey(dayDate);
+            const dayData = plannerData[dateStr] || { shifts: [], tasks: [], location: 'Home Office' };
+
+            const col = document.createElement('div');
+            col.className = 'week-col';
+
+            const header = document.createElement('div');
+            header.className = 'week-col-header';
+            header.innerHTML = `
+                <div class="week-col-title">${weekDays[i]}</div>
+                <div class="week-col-date">${dayDate.getDate()} de ${getMonthNameShort(dayDate.getMonth())}</div>
+            `;
+            col.appendChild(header);
+
+            const content = document.createElement('div');
+            content.className = 'week-col-content';
+
+            const hrs = calcTotalDayHours(dayData);
+            content.innerHTML += `
+                <div class="week-section-title">Horas (${hrs.toFixed(1)}h)</div>
+                <div class="day-badge-row" style="margin-bottom: 8px;">
+                    <span class="badge-mini badge-purple">${dayData.location}</span>
+                </div>
+            `;
+
+            if (dayData.shifts && dayData.shifts.length > 0) {
+                dayData.shifts.forEach(s => {
+                    content.innerHTML += `
+                        <div style="font-size: 0.8rem; display: flex; justify-content: space-between;">
+                            <span>🌅 ${s.start} - ${s.end}</span>
+                            <strong>${calcShiftHours(s.start, s.end).toFixed(1)}h</strong>
+                        </div>
+                    `;
+                });
+            } else {
+                content.innerHTML += `<div style="font-size: 0.78rem; color: var(--text-muted); font-style: italic">Sem turnos</div>`;
+            }
+
+            content.innerHTML += `<div class="week-section-title" style="margin-top: 12px;">Checklist</div>`;
+            if (dayData.tasks && dayData.tasks.length > 0) {
+                dayData.tasks.forEach((t) => {
+                    content.innerHTML += `
+                        <div style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px; ${t.completed ? 'text-decoration: line-through; opacity: 0.5' : ''}">
+                            <i class="fa-regular ${t.completed ? 'fa-square-check text-green-500' : 'fa-square'}"></i>
+                            <span class="truncate">${t.text}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                content.innerHTML += `<div style="font-size: 0.78rem; color: var(--text-muted);">Sem tarefas</div>`;
+            }
+
+            const manageBtn = document.createElement('button');
+            manageBtn.className = 'notion-btn btn-secondary btn-xs';
+            manageBtn.style.marginTop = 'auto';
+            manageBtn.innerHTML = '<i class="fa-solid fa-arrow-up-right-from-square"></i> Abrir dia';
+            manageBtn.onclick = () => openDrawer(dateStr);
+            content.appendChild(manageBtn);
+
+            col.appendChild(content);
+            container.appendChild(col);
+        }
+    }
+
+    // --- NAVEGAÇÃO DOS MESES ---
+    function prevMonth() {
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        currentDayOffset = new Date(currentYear, currentMonth, 1);
+        renderAll();
+    }
+
+    function nextMonth() {
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        currentDayOffset = new Date(currentYear, currentMonth, 1);
+        renderAll();
+    }
+
+    function goToday() {
+        currentYear = 2026;
+        currentMonth = 5;
+        currentDayOffset = new Date(2026, 5, 10);
+        renderAll();
+        triggerToast('Retornou para Hoje (10/06/2026)');
+    }
+
+    function prevWeek() {
+        currentDayOffset.setDate(currentDayOffset.getDate() - 7);
+        currentMonth = currentDayOffset.getMonth();
+        currentYear = currentDayOffset.getFullYear();
+        renderAll();
+    }
+
+    function nextWeek() {
+        currentDayOffset.setDate(currentDayOffset.getDate() + 7);
+        currentMonth = currentDayOffset.getMonth();
+        currentYear = currentDayOffset.getFullYear();
+        renderAll();
+    }
+
+    function switchView(view) {
+        currentView = view;
+        document.getElementById('tab-month').classList.toggle('active', view === 'month');
+        document.getElementById('tab-week').classList.toggle('active', view === 'week');
+
+        document.getElementById('month-view-container').classList.toggle('hidden', view !== 'month');
+        document.getElementById('week-view-container').classList.toggle('hidden', view !== 'week');
+        renderAll();
+    }
+
+    function updateMonthHeader() {
+        document.getElementById('current-month-year').innerText = `${getMonthName(currentMonth)} de ${currentYear}`;
+    }
+
+    // --- SISTEMA DRAWER LATERAL ---
+    function openDrawer(dateStr) {
+        currentEditingDateStr = dateStr;
+        const parsedDate = new Date(dateStr + "T00:00:00");
+        
+        document.getElementById('drawer-date-title').innerText = `${parsedDate.getDate()} de ${getMonthName(parsedDate.getMonth())} de ${parsedDate.getFullYear()}`;
+        document.getElementById('drawer-day-name').innerText = getDayOfWeekName(parsedDate.getDay());
+
+        if (!plannerData[dateStr]) {
+            plannerData[dateStr] = {
+                emoji: '📅',
+                project: '',
+                location: 'Home Office',
+                shifts: [],
+                tasks: [],
+                notes: ''
+            };
+        }
+
+        const dayData = plannerData[dateStr];
+
+        document.getElementById('day-emoji').innerText = dayData.emoji || '📅';
+        document.getElementById('property-project').value = dayData.project || '';
+        document.getElementById('property-location').value = dayData.location || 'Home Office';
+        document.getElementById('day-notes').value = dayData.notes || '';
+
+        renderShiftsList();
+        renderTasksList();
+        updateDrawerHours();
+
+        document.getElementById('notion-drawer').classList.add('open');
+    }
+
+    function closeDrawer() {
+        document.getElementById('notion-drawer').classList.remove('open');
+        renderAll();
+    }
+
+    function navigateDay(offset) {
+        const currentObj = new Date(currentEditingDateStr + "T00:00:00");
+        currentObj.setDate(currentObj.getDate() + offset);
+        openDrawer(formatDateKey(currentObj));
+    }
+
+    function saveCurrentDayData() {
+        if (!currentEditingDateStr) return;
+        const dayData = plannerData[currentEditingDateStr];
+        
+        dayData.project = document.getElementById('property-project').value.trim();
+        dayData.location = document.getElementById('property-location').value;
+        dayData.notes = document.getElementById('day-notes').value;
+
+        updateDrawerHours();
+        autoSaveTrigger();
+    }
+
+    function toggleDayEmojiPicker(event) {
+        event.stopPropagation();
+        document.getElementById('day-emoji-picker').classList.toggle('hidden');
+    }
+
+    function selectDayEmoji(emoji) {
+        if (!currentEditingDateStr) return;
+        plannerData[currentEditingDateStr].emoji = emoji;
+        document.getElementById('day-emoji').innerText = emoji;
+        document.getElementById('day-emoji-picker').classList.add('hidden');
+        autoSaveTrigger();
+    }
+
+    // --- GESTÃO DE TURNOS ---
+    function renderShiftsList() {
+        const list = document.getElementById('shifts-list');
+        list.innerHTML = '';
+        
+        const dayData = plannerData[currentEditingDateStr];
+        if (!dayData.shifts || dayData.shifts.length === 0) {
+            list.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 10px;">Nenhum turno cadastrado para este dia.</div>`;
+            return;
+        }
+
+        dayData.shifts.forEach((s, idx) => {
+            const duration = calcShiftHours(s.start, s.end);
+            const row = document.createElement('div');
+            row.className = 'shift-row';
+            row.innerHTML = `
+                <input type="time" value="${s.start}" onchange="window.updateShiftValue(${idx}, 'start', this.value)">
+                <span>até</span>
+                <input type="time" value="${s.end}" onchange="window.updateShiftValue(${idx}, 'end', this.value)">
+                <span class="shift-duration">${duration.toFixed(1)}h</span>
+                <button class="delete-shift-btn" onclick="window.deleteShift(${idx})"><i class="fa-regular fa-trash-can"></i></button>
+            `;
+            list.appendChild(row);
+        });
+    }
+
+    function addNewShift() {
+        if (!currentEditingDateStr) return;
+        const dayData = plannerData[currentEditingDateStr];
+        
+        let start = "08:00";
+        let end = "12:00";
+        if (dayData.shifts.length > 0) {
+            start = "13:00";
+            end = "18:00";
+        }
+
+        dayData.shifts.push({ start, end });
+        renderShiftsList();
+        saveCurrentDayData();
+    }
+
+    function updateShiftValue(index, field, value) {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.shifts[index][field] = value;
+        renderShiftsList();
+        saveCurrentDayData();
+    }
+
+    // Expondo as funções necessárias no escopo global para que funcionem com inline 'onclick'
+    window.updateShiftValue = updateShiftValue;
+
+    function deleteShift(index) {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.shifts.splice(index, 1);
+        renderShiftsList();
+        saveCurrentDayData();
+    }
+
+    window.deleteShift = deleteShift;
+
+    function clearShifts() {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.shifts = [];
+        renderShiftsList();
+        saveCurrentDayData();
+    }
+
+    function applyDefaultPreset() {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.shifts = [
+            { start: "08:00", end: "12:00" },
+            { start: "13:00", end: "18:00" }
+        ];
+        renderShiftsList();
+        saveCurrentDayData();
+        triggerToast('Preset padrão de 9h aplicado!');
+    }
+
+    function updateDrawerHours() {
+        const dayData = plannerData[currentEditingDateStr];
+        const total = calcTotalDayHours(dayData);
+        document.getElementById('drawer-total-hours-value').innerText = `${total.toFixed(1)} horas`;
+    }
+
+    // --- GESTÃO DE TAREFAS ---
+    function renderTasksList() {
+        const list = document.getElementById('tasks-list');
+        list.innerHTML = '';
+
+        const dayData = plannerData[currentEditingDateStr];
+        if (!dayData.tasks || dayData.tasks.length === 0) {
+            list.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 10px;">Sem tarefas hoje.</div>`;
+            return;
+        }
+
+        dayData.tasks.forEach((t, idx) => {
+            const item = document.createElement('div');
+            item.className = `task-item ${t.completed ? 'completed' : ''}`;
+            item.innerHTML = `
+                <div class="task-checkbox-wrapper">
+                    <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="window.toggleTaskStatus(${idx})">
+                </div>
+                <div class="task-text" contenteditable="true" onblur="window.updateTaskText(${idx}, this.innerText)">${t.text}</div>
+                <button class="delete-shift-btn" onclick="window.deleteTask(${idx})"><i class="fa-regular fa-trash-can"></i></button>
+            `;
+            list.appendChild(item);
+        });
+    }
+
+    function handleNewTaskKeydown(event) {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            addNewTask();
+        }
+    }
+
+    function addNewTask() {
+        const input = document.getElementById('new-task-input');
+        const val = input.value.trim();
+        if (!val) return;
+
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.tasks.push({ text: val, completed: false });
+        
+        input.value = '';
+        renderTasksList();
+        autoSaveTrigger();
+    }
+
+    function toggleTaskStatus(index) {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.tasks[index].completed = !dayData.tasks[index].completed;
+        renderTasksList();
+        autoSaveTrigger();
+    }
+
+    window.toggleTaskStatus = toggleTaskStatus;
+
+    function updateTaskText(index, text) {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.tasks[index].text = text.trim();
+        autoSaveTrigger();
+    }
+
+    window.updateTaskText = updateTaskText;
+
+    function deleteTask(index) {
+        const dayData = plannerData[currentEditingDateStr];
+        dayData.tasks.splice(index, 1);
+        renderTasksList();
+        autoSaveTrigger();
+    }
+
+    window.deleteTask = deleteTask;
+
+    // --- TEMAS (MODO CLARO E ESCURO) ---
+    function toggleTheme() {
+        const body = document.body;
+        body.classList.toggle('light-theme');
+        const isLight = body.classList.contains('light-theme');
+        
+        document.getElementById('theme-icon').className = isLight ? 'fa-solid fa-moon' : 'fa-solid fa-sun';
+        document.getElementById('theme-text').innerText = isLight ? 'Modo Escuro' : 'Modo Claro';
+
+        localStorage.setItem('notion-theme', isLight ? 'light' : 'dark');
+        triggerToast(isLight ? 'Modo Claro ativado' : 'Modo Escuro ativado');
+    }
+
+    function loadThemePreference() {
+        const savedTheme = localStorage.getItem('notion-theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-theme');
+            document.getElementById('theme-icon').className = 'fa-solid fa-moon';
+            document.getElementById('theme-text').innerText = 'Modo Escuro';
+        }
+    }
+
+    // --- EXPORTAÇÃO E IMPORTAÇÃO JSON ---
+    function exportData() {
+        const backup = { meta: pageMeta, data: plannerData };
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backup));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `Backup_Cronograma_Notion_${currentYear}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+        triggerToast('Backup exportado com sucesso!');
+    }
+
+    function triggerImport() {
+        document.getElementById('import-file-input').click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const imported = JSON.parse(e.target.result);
+                if (imported.meta && imported.data) {
+                    pageMeta = imported.meta;
+                    plannerData = imported.data;
+                    renderAll();
+                    queueServerSave();
+                    triggerToast('Backup importado e sincronizado!');
+                } else {
+                    triggerToast('Formato inválido.');
+                }
+            } catch (err) {
+                triggerToast('Erro de processamento.');
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- UTILITÁRIOS ---
+    function formatDateKey(dateObj) {
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function formatDateShort(dateObj) {
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        return `${day}/${month}`;
+    }
+
+    function getMonday(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+        return new Date(d.setDate(diff));
+    }
+
+    function getMonthName(monthIndex) {
+        const names = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
+        return names[monthIndex];
+    }
+
+    function getMonthNameShort(monthIndex) {
+        return getMonthName(monthIndex).substring(0, 3);
+    }
+
+    function getDayOfWeekName(dayIndex) {
+        const names = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
+        return names[dayIndex];
+    }
+
+    // --- ASSOCIAÇÃO SEGURA DE ESCOPO DE MÓDULO PARA WINDOW (Essencial para inline onclick handlers) ---
+    window.changeCover = changeCover;
+    window.openEmojiPicker = openEmojiPicker;
+    window.selectPageEmoji = selectPageEmoji;
+    window.savePageMeta = savePageMeta;
+    window.toggleTheme = toggleTheme;
+    window.exportData = exportData;
+    window.triggerImport = triggerImport;
+    window.importData = importData;
+    window.prevMonth = prevMonth;
+    window.nextMonth = nextMonth;
+    window.goToday = goToday;
+    window.switchView = switchView;
+    window.prevWeek = prevWeek;
+    window.nextWeek = nextWeek;
+    window.openDrawer = openDrawer;
+    window.closeDrawer = closeDrawer;
+    window.navigateDay = navigateDay;
+    window.toggleDayEmojiPicker = toggleDayEmojiPicker;
+    window.selectDayEmoji = selectDayEmoji;
+    window.saveCurrentDayData = saveCurrentDayData;
+    window.applyDefaultPreset = applyDefaultPreset;
+    window.clearShifts = clearShifts;
+    window.addNewShift = addNewShift;
+    window.handleNewTaskKeydown = handleNewTaskKeydown;
+    window.addNewTask = addNewTask;
+</script>
